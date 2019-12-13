@@ -3,15 +3,24 @@ import fs from 'fs'
 import { Pool, Client } from 'pg'
 
 //Connection to postgress sql
+console.log('Connecting data base...')
 const connectionString = 'postgresql://octopus:secret@localhost:5432/wtw-dev'
 const client = new Client({
     connectionString: connectionString,
 })
 
-client.connect()
+client
+    .connect()
+    .then(() => {
+        console.log('Database conected successfully.')
+        console.log('Uploading data... 🚀')
+
+    })
+    .catch(err => console.error('connection error', err.stack))
+
 
 // creamos tabla si no existe
-/*
+
 const createTableText =
     `CREATE TABLE IF NOT EXISTS policies (
         clientId VARCHAR(255) NOT NULL,
@@ -57,23 +66,28 @@ const createTableText =
 
 client.query(createTableText)
     .then((res) => {
-        console.log(res);
+        //console.log(res);
     })
     .catch((err) => {
         console.log(err);
         client.end();
     });
 
-*/
-
 // Read file 
 const results = []
+console.log('Reading data file csv...')
 fs.createReadStream('top_recommended_riskclass_high_prechurn_august_w1.csv')
     .pipe(csv())
-    .on('data', (data) => results.push(data))
+    .on('data', (data) => (
+        results.push(data))
+    )
     .on('end', () => {
-        console.log(results);
         //save DataFile in DB
+
+        results.map((row) => {
+            console.log(row)
+        })
+
         const queryText = `INSERT INTO policies("clientId", "brokerShortName","department","coverNumber","churnPropensityScore","riskClass",
             "businessDescription","versionNumber","effectiveDate","expiryDate","premium","totalIncome","stampDuty","fireServicesLevy","insurerCharge",
             "brokerCharge","brokerAdminFeeGST","adminFee","discount","gstOnDiscount","gstOnPremium","brokerage","gstOnBrokerage","dueByClient","paidToDate",
@@ -81,52 +95,68 @@ fs.createReadStream('top_recommended_riskclass_high_prechurn_august_w1.csv')
             VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,
             $33,$34,$35,$36,$37,$38,$39) RETURNING id`
 
-        results.map((row) => (
-            client.query(queryText, [
-                row.ClientId,
-                row.Broker,
-                row.Department,
-                row.CoverNumber,
-                row.ChurnPropensityScore,
-                row.RiskClassonPreChurnPolicies,
-                row.BusinessDescription,
-                row.VersionNumber,
-                row.EffectiveDate,
-                row.ExpiryDate,
-                row.Premium,
-                row.TotalIncome,
-                row.StampDuty,
-                row.FireServicesLevy,
-                row.InsurerCharge,
-                row.BrokerCharge,
-                row.BrokerAdminFeeGST,
-                row.AdminFee,
-                row.Discount,
-                row.GSTonDiscount,
-                row.GSTonPremium,
-                row.Brokerage,
-                row.GSTonBrokerage,
-                row.DuebyClient,
-                row.PaidtoDate,
-                row.SubAgentIncome,
-                row.ThirdPartyBrokerRate,
-                row.ThirdPartyBrokerCommission,
-                row.IncomeClass,
-                row.Top_1,
-                row.Top_2,
-                row.Top_3,
-                row.Top_4,
-                row.Top_5,
-                row.Top_6,
-                row.Top_7,
-                row.Top_8,
-                row.Top_9,
-                row.Top_10,
-            ], (err, res) => {
-                console.log(err, res)
-            })
-        ));
+        setTimeout(() => {
+            results.map((row) => {
+                client.query(queryText, [
+                    row.ClientId,
+                    row.Broker,
+                    row.Department,
+                    row.CoverNumber,
+                    row.ChurnPropensityScore,
+                    row.RiskClassonPreChurnPolicies,
+                    row.BusinessDescription,
+                    row.VersionNumber,
+                    row.EffectiveDate,
+                    row.ExpiryDate,
+                    row.Premium,
+                    row.TotalIncome,
+                    row.StampDuty,
+                    row.FireServicesLevy,
+                    row.InsurerCharge,
+                    row.BrokerCharge,
+                    row.BrokerAdminFeeGST,
+                    row.AdminFee,
+                    row.Discount,
+                    row.GSTonDiscount,
+                    row.GSTonPremium,
+                    row.Brokerage,
+                    row.GSTonBrokerage,
+                    row.DuebyClient,
+                    row.PaidtoDate,
+                    row.SubAgentIncome,
+                    row.ThirdPartyBrokerRate,
+                    row.ThirdPartyBrokerCommission,
+                    row.IncomeClass,
+                    row.Top_1,
+                    row.Top_2,
+                    row.Top_3,
+                    row.Top_4,
+                    row.Top_5,
+                    row.Top_6,
+                    row.Top_7,
+                    row.Top_8,
+                    row.Top_9,
+                    row.Top_10,
+                ], (err, res) => {
+                    if (res) {
+                        console.log('Record has been created successfully: ')
+                        console.log(res.rows)
+                        console.log("__________________________________________________")
+
+                    }
+                    if (err) {
+                        console.log(err)
+                    }
+
+                })
+
+            });
+
+        }, 5000)
+
+
     });
+
 
 
 
